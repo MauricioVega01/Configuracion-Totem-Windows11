@@ -142,6 +142,7 @@ El script valida en verde (`[OK]`):
 - **Actualizar el backend local sin reinstalar:** ejecutar `scripts\03-actualizar-backend.bat` como Administrador.
 - **Guía de diagnóstico en terreno:** ver [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
 - **Checklist firmable por equipo desplegado:** ver [docs/CHECKLIST_INSTALACION.md](docs/CHECKLIST_INSTALACION.md).
+- **Informe Técnico Corporativo WIT (Arquitectura, APIs, BD MySQL Workbench, POS y Entregabilidad):** ver [docs/Informe_Tecnico_Arquitectura_y_Entregabilidad_Totem_WIT.docx](docs/Informe_Tecnico_Arquitectura_y_Entregabilidad_Totem_WIT.docx).
 
 ---
 

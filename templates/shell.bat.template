@@ -1,0 +1,21 @@
+@echo off
+title Totem Runtime Boletos.la (ID 101)
+
+:: Fijar impresora predeterminada y evitar que Windows la cambie automaticamente
+reg add "HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Windows" /v LegacyDefaultPrinterMode /t REG_DWORD /d 1 /f >nul 2>&1
+powershell -NoProfile -Command "(New-Object -ComObject WScript.Network).SetDefaultPrinter('w80')"
+
+:: Limpiar instancias previas para evitar conflictos en puerto 3000 o puerto COM
+taskkill /F /IM node.exe >nul 2>&1
+taskkill /F /IM chrome.exe >nul 2>&1
+timeout /t 1 /nobreak >nul
+
+:: Iniciar backend local en puerto 3000 (minimizado con auto-reinicio)
+start /min "POS_BACKEND" cmd /c "C:\ProgramData\kiosk\start-backend.bat"
+timeout /t 3 /nobreak >nul
+
+:: Bucle de proteccion de Chrome Kiosk (si se cierra, se reabre automaticamente)
+:kiosk_loop
+start /wait "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing https://totem-testing-v3.netlify.app/ --disable-web-security --user-data-dir="C:\ProgramData\kiosk\chrome_session" --allow-running-insecure-content --disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks,LocalNetworkAccessChecksWebSockets --unsafely-treat-insecure-origin-as-secure=http://localhost:3000 --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 --disable-pinch
+timeout /t 2 /nobreak >nul
+goto kiosk_loop

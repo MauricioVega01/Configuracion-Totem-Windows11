@@ -1,0 +1,8 @@
+@echo off
+title Backend Local Totem (Puerto 3000)
+cd /d "C:\ProgramData\kiosk\backend"
+:loop
+node src/server.js
+echo [KIOSK] Backend detenido. Reiniciando en 2 segundos...
+timeout /t 2 /nobreak >nul
+goto loop

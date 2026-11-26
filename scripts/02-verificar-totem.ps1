@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$PrintTest,
     [string]$PrinterName = ""
 )
@@ -82,12 +82,17 @@ Check-Result "Politica Chrome LocalNetworkAccess" ([bool]$p1) "Permite HTTPS -> 
 # 5. Impresora termica (Autodeteccion y autoregistro en Windows si no existe)
 $printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
 if (-not $printer) {
+    Add-PrinterDriver -Name "Generic / Text Only" -ErrorAction SilentlyContinue
+    Add-PrinterDriver -Name "Genérica / Sólo texto" -ErrorAction SilentlyContinue
+    $drv = (Get-PrinterDriver -ErrorAction SilentlyContinue | Where-Object { $_.Name -match "Generic|Generica" } | Select-Object -First 1).Name
     $pPort = (Get-PrinterPort -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "USB*" } | Select-Object -First 1).Name
     if (-not $pPort) { $pPort = "USB001" }
-    try {
-        Add-Printer -Name $PrinterName -DriverName "Generic / Text Only" -PortName $pPort -ErrorAction SilentlyContinue
-        $printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
-    } catch {}
+    if ($drv) {
+        try {
+            Add-Printer -Name $PrinterName -DriverName $drv -PortName $pPort -ErrorAction SilentlyContinue
+            $printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
+        } catch {}
+    }
 }
 $printerDetail = if ($printer) { "$($printer.PortName) / $($printer.DriverName)" } else { "No detectada en Windows (conecta USB)" }
 Check-Result "Impresora termica '$PrinterName'" ([bool]$printer) $printerDetail

@@ -67,7 +67,7 @@ for /f "usebackq tokens=*" %%p in (`powershell -NoProfile -Command "(Get-Printer
 
 :: Si no hay cola registrada, buscar dispositivo USB fisico conectado (ej: SPRT, POS, Xprinter) y registrarlo automaticamente
 if "%AUTO_PRINTER%"=="" (
-    for /f "usebackq tokens=*" %%p in (`powershell -NoProfile -Command "$dev = Get-PnpDevice -PresentOnly | Where-Object { $_.FriendlyName -match '80mm|SPRT|\bPOS\b|Xprint|Thermal' } | Select-Object -First 1; if ($dev) { $pName = $dev.FriendlyName.Trim(); try { Add-Printer -Name $pName -DriverName 'Generic / Text Only' -PortName 'USB001' -ErrorAction SilentlyContinue } catch {}; Write-Output $pName }"`) do set "AUTO_PRINTER=%%p"
+    for /f "usebackq tokens=*" %%p in (`powershell -NoProfile -Command "Add-PrinterDriver -Name 'Generic / Text Only' -ErrorAction SilentlyContinue; Add-PrinterDriver -Name 'Genérica / Sólo texto' -ErrorAction SilentlyContinue; $dev = Get-PnpDevice -PresentOnly | Where-Object { $_.FriendlyName -match '80mm|SPRT|\bPOS\b|Xprint|Thermal' } | Select-Object -First 1; if ($dev) { $pName = $dev.FriendlyName.Trim(); $drv = (Get-PrinterDriver | Where-Object { $_.Name -match 'Generic|Generica' } | Select-Object -First 1).Name; try { Add-Printer -Name $pName -DriverName $drv -PortName 'USB001' -ErrorAction SilentlyContinue } catch {}; Write-Output $pName }"`) do set "AUTO_PRINTER=%%p"
 )
 
 if "%AUTO_PRINTER%"=="" set "AUTO_PRINTER=w80"

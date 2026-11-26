@@ -19,16 +19,30 @@ echo.
 set "INSTALLERS_DIR=%~dp0..\installers"
 
 :: 2. Instalar Google Chrome si no existe
-if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
-    echo [OK] Google Chrome ya se encuentra instalado.
+set "CHROME_EXE="
+if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=C:\Program Files\Google\Chrome\Application\chrome.exe"
+if exist "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"
+if exist "%LocalAppData%\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=%LocalAppData%\Google\Chrome\Application\chrome.exe"
+
+if defined CHROME_EXE (
+    echo [OK] Google Chrome ya instalado en: !CHROME_EXE!
 ) else (
-    echo [INFO] Instalando Google Chrome de forma silenciosa...
-    if exist "%INSTALLERS_DIR%\ChromeSetup.exe" (
-        start /wait "" "%INSTALLERS_DIR%\ChromeSetup.exe" /silent /install
-        echo [OK] Google Chrome instalado exitosamente.
-    ) else (
-        echo [AVISO] ChromeSetup.exe no encontrado en installers\. Intentando via winget...
+    echo [INFO] Instalando Google Chrome...
+    :: Intentar primero con winget (metodo oficial nativo de Windows 11, no se congela)
+    where winget >nul 2>&1
+    if %errorlevel% equ 0 (
+        echo [INFO] Descargando e instalando via Windows Package Manager (winget)...
         winget install Google.Chrome --silent --accept-package-agreements --accept-source-agreements
+    )
+    
+    :: Si winget no lo instalo o no existe, usar el instalador local con interfaz visible
+    if not exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
+        if exist "%INSTALLERS_DIR%\ChromeSetup.exe" (
+            echo [INFO] Ejecutando ChromeSetup.exe desde carpeta installers...
+            start "" "%INSTALLERS_DIR%\ChromeSetup.exe"
+            echo [INFO] Esperando a que finalice la instalacion de Google Chrome...
+            timeout /t 10 /nobreak >nul
+        )
     )
 )
 

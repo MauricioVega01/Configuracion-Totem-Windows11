@@ -2,12 +2,18 @@
 chcp 65001 >nul
 title Actualizar Backend Local Totem (WIT)
 
+:: Asegurar que el directorio de trabajo sea la raiz del repositorio
+cd /d "%~dp0\.."
+
 net session >nul 2>&1
 if %errorlevel% neq 0 (
     echo Solicitando permisos de Administrador...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/k \"\"%~f0\"\"' -Verb RunAs -WorkingDirectory '%~dp0..'"
     exit /b
 )
+
+:: Asegurar PATH con Node.js, Git y Chrome en la sesion actual
+set "PATH=%PATH%;C:\Program Files\nodejs\;C:\Program Files\Git\cmd\;C:\Program Files\Google\Chrome\Application\"
 
 set "BACKEND_DIR=C:\ProgramData\kiosk\backend"
 if not exist "%BACKEND_DIR%\.git" (

@@ -3,13 +3,22 @@ chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title Instalador Oficial Totem Boletos.la Chile (WIT)
 
-:: 1. Verificar permisos de Administrador (auto-elevacion UAC)
+:: Asegurar que el directorio de trabajo sea siempre la raiz del repositorio
+cd /d "%~dp0\.."
+
+:: 1. Verificar permisos de Administrador (auto-elevacion UAC con ventana persistente)
 net session >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Solicitando permisos de Administrador...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    echo ====================================================================
+    echo   [AVISO] Se requieren permisos de Administrador.
+    echo   Abriendo nueva consola con privilegios elevados...
+    echo ====================================================================
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/k \"\"%~f0\"\"' -Verb RunAs -WorkingDirectory '%~dp0..'"
     exit /b
 )
+
+:: Asegurar PATH con Node.js, Git y Chrome en la sesion actual
+set "PATH=%PATH%;C:\Program Files\nodejs\;C:\Program Files\Git\cmd\;C:\Program Files\Google\Chrome\Application\"
 
 echo ====================================================================
 echo   INSTALADOR AUTOMATICO - TOTEM BOLETOS.LA CHILE (WIT)

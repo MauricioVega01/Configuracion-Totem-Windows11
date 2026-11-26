@@ -3,13 +3,22 @@ chcp 65001 >nul
 setlocal EnableDelayedExpansion
 title Instalador de Prerrequisitos - Totem Boletos.la Chile
 
-:: 1. Auto-elevación a Administrador
+:: Asegurar que el directorio de trabajo sea la raiz del repositorio
+cd /d "%~dp0\.."
+
+:: 1. Auto-elevacion a Administrador con ventana persistente
 net session >nul 2>&1
 if %errorlevel% neq 0 (
-    echo Solicitando permisos de Administrador...
-    powershell -NoProfile -Command "Start-Process -FilePath '%~f0' -Verb RunAs"
+    echo ====================================================================
+    echo   [AVISO] Se requieren permisos de Administrador.
+    echo   Abriendo consola con privilegios elevados...
+    echo ====================================================================
+    powershell -NoProfile -Command "Start-Process cmd.exe -ArgumentList '/k \"\"%~f0\"\"' -Verb RunAs -WorkingDirectory '%~dp0..'"
     exit /b
 )
+
+:: Asegurar PATH en la sesion actual
+set "PATH=%PATH%;C:\Program Files\nodejs\;C:\Program Files\Git\cmd\;C:\Program Files\Google\Chrome\Application\"
 
 echo ====================================================================
 echo   INSTALADOR DE PRERREQUISITOS - TOTEM BOLETOS.LA (WINDOWS 11)

@@ -23,8 +23,18 @@ if ([string]::IsNullOrWhiteSpace($PrinterName) -and (Test-Path "C:\ProgramData\k
         }
     }
 }
-if ([string]::IsNullOrWhiteSpace($PrinterName)) {
-    $PrinterName = "w80"
+if ([string]::IsNullOrWhiteSpace($PrinterName) -or $PrinterName -eq "AUTO") {
+    $realPrinter = (Get-Printer -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch "PDF|OneNote|Fax|XPS|Microsoft" } | Select-Object -First 1).Name
+    if ($realPrinter) {
+        $PrinterName = $realPrinter
+    } else {
+        $usbPrinter = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|POS|Xprint|Thermal' } | Select-Object -First 1).FriendlyName
+        if ($usbPrinter) {
+            $PrinterName = $usbPrinter
+        } else {
+            $PrinterName = "w80"
+        }
+    }
 }
 
 function Check-Result($name, $ok, $detail) {
@@ -70,9 +80,22 @@ Check-Result "Archivo .env local" (Test-Path "C:\ProgramData\kiosk\backend\.env"
 $p1 = Get-ItemProperty -Path "HKLM:\SOFTWARE\Policies\Google\Chrome\LocalNetworkAccessAllowedForUrls" -ErrorAction SilentlyContinue
 Check-Result "Politica Chrome LocalNetworkAccess" ([bool]$p1) "Permite HTTPS -> localhost:3000"
 
-# 5. Impresora termica w80
+# 5. Impresora termica (Autodeteccion y autoregistro si esta conectada por USB)
 $printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
-Check-Result "Impresora termica '$PrinterName'" ([bool]$printer) ($printer.PortName + " / " + $printer.DriverName)
+if (-not $printer) {
+    $usbThermal = Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|POS|Xprint|Thermal' } | Select-Object -First 1
+    if ($usbThermal) {
+        $pPort = (Get-PrinterPort -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "USB*" } | Select-Object -First 1).Name
+        if (-not $pPort) { $pPort = "USB001" }
+        try {
+            Add-Printer -Name $usbThermal.FriendlyName -DriverName "Generic / Text Only" -PortName $pPort -ErrorAction SilentlyContinue
+            $printer = Get-Printer -Name $usbThermal.FriendlyName -ErrorAction SilentlyContinue
+            if ($printer) { $PrinterName = $usbThermal.FriendlyName }
+        } catch {}
+    }
+}
+$printerDetail = if ($printer) { "$($printer.PortName) / $($printer.DriverName)" } else { "No detectada en Windows (conecta USB)" }
+Check-Result "Impresora termica '$PrinterName'" ([bool]$printer) $printerDetail
 
 # 6. Backend local HTTP 3000
 try {

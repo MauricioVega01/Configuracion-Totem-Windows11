@@ -56,14 +56,26 @@ if %errorlevel% neq 0 (
     echo.
 )
 
-:: 3. Solicitar parametros del nuevo totem
+:: 3. Solicitar parametros del nuevo totem con autodeteccion inteligente
 set "TOTEM_ID=101"
 set /p "TOTEM_ID=Ingrese ID del Totem [default: 101]: "
 if "%TOTEM_ID%"=="" set "TOTEM_ID=101"
 
-set "PRINTER_NAME=w80"
-set /p "PRINTER_NAME=Ingrese nombre exacto de la impresora termica [default: w80]: "
-if "%PRINTER_NAME%"=="" set "PRINTER_NAME=w80"
+:: Autodetectar impresora fisica / termica en Windows (ignorar PDF, OneNote, etc.)
+set "AUTO_PRINTER="
+for /f "usebackq tokens=*" %%p in (`powershell -NoProfile -Command "(Get-Printer | Where-Object { $_.Name -notmatch 'PDF|OneNote|Fax|XPS|Microsoft' } | Select-Object -First 1).Name"`) do set "AUTO_PRINTER=%%p"
+
+:: Si no hay cola registrada, buscar dispositivo USB fisico conectado (ej: SPRT, POS, Xprinter) y registrarlo automaticamente
+if "%AUTO_PRINTER%"=="" (
+    for /f "usebackq tokens=*" %%p in (`powershell -NoProfile -Command "$dev = Get-PnpDevice -PresentOnly | Where-Object { $_.FriendlyName -match '80mm|SPRT|POS|Xprint|Thermal' } | Select-Object -First 1; if ($dev) { $pName = $dev.FriendlyName.Trim(); try { Add-Printer -Name $pName -DriverName 'Generic / Text Only' -PortName 'USB001' -ErrorAction SilentlyContinue } catch {}; Write-Output $pName }"`) do set "AUTO_PRINTER=%%p"
+)
+
+if "%AUTO_PRINTER%"=="" set "AUTO_PRINTER=w80"
+
+echo [INFO] Impresora termica detectada: !AUTO_PRINTER!
+set "PRINTER_NAME=!AUTO_PRINTER!"
+set /p "PRINTER_NAME=Confirma el nombre de la impresora termica [default: !AUTO_PRINTER!]: "
+if "%PRINTER_NAME%"=="" set "PRINTER_NAME=!AUTO_PRINTER!"
 
 set "KIOSK_URL=https://totem-testing-v3.netlify.app/"
 set /p "KIOSK_URL=Ingrese URL del Frontend Kiosco [default: https://totem-testing-v3.netlify.app/]: "

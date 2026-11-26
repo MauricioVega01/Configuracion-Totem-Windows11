@@ -115,7 +115,11 @@ if exist "%BACKEND_DIR%\.git" (
 if not exist "%BACKEND_DIR%\node_modules" (
     echo [INFO] Instalando dependencias npm del backend local...
     pushd "%BACKEND_DIR%"
-    call npm install --production
+    if exist "C:\Program Files\nodejs\npm.cmd" (
+        call "C:\Program Files\nodejs\npm.cmd" install --production
+    ) else (
+        call npm install --production
+    )
     popd
 )
 

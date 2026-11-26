@@ -69,6 +69,7 @@ Check-Result "Google Chrome instalado" ([bool]$foundChrome) ($foundChrome)
 
 # 3. Archivos Kiosco
 Check-Result "Backend en C:\ProgramData\kiosk\backend" (Test-Path "C:\ProgramData\kiosk\backend\src\server.js") "server.js presente"
+Check-Result "Dependencias npm (node_modules)" (Test-Path "C:\ProgramData\kiosk\backend\node_modules") "Paquetes npm instalados"
 $rawPrintOk = (Test-Path "C:\ProgramData\kiosk\backend\bin\rawprint.exe")
 $kioskPrintOk = (Test-Path "C:\ProgramData\kiosk\shell.bat")
 Check-Result "Motor Impresion w80 (Kiosk/RAW)" ($rawPrintOk -or $kioskPrintOk) "Impresion termica silenciosa configurada"

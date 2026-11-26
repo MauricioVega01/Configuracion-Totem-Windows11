@@ -1,11 +1,31 @@
 param(
     [switch]$PrintTest,
-    [string]$PrinterName = "w80"
+    [string]$PrinterName = ""
 )
 
 $ErrorActionPreference = "Continue"
 $passed = 0
 $failed = 0
+
+# Recargar PATH en memoria para detectar Node.js recien instalado
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+if (Test-Path "C:\Program Files\nodejs\node.exe") {
+    $env:Path = "C:\Program Files\nodejs;$env:Path"
+}
+
+# Si no se paso PrinterName, leer del .env del backend
+if ([string]::IsNullOrWhiteSpace($PrinterName) -and (Test-Path "C:\ProgramData\kiosk\backend\.env")) {
+    $envLines = Get-Content "C:\ProgramData\kiosk\backend\.env"
+    foreach ($line in $envLines) {
+        if ($line -match "^\s*PRINTER_NAME=(.+)$") {
+            $PrinterName = $matches[1].Trim()
+            break
+        }
+    }
+}
+if ([string]::IsNullOrWhiteSpace($PrinterName)) {
+    $PrinterName = "w80"
+}
 
 function Check-Result($name, $ok, $detail) {
     if ($ok) {
@@ -24,11 +44,19 @@ Write-Host ""
 
 # 1. Node.js
 $nodeVer = (& node -v 2>$null)
+if (-not $nodeVer -and (Test-Path "C:\Program Files\nodejs\node.exe")) {
+    $nodeVer = (& "C:\Program Files\nodejs\node.exe" -v 2>$null)
+}
 Check-Result "Node.js instalado" ([bool]$nodeVer) "Version: $nodeVer (recomendado v14.x)"
 
-# 2. Chrome
-$chromePath = "C:\Program Files\Google\Chrome\Application\chrome.exe"
-Check-Result "Google Chrome x64" (Test-Path $chromePath) $chromePath
+# 2. Chrome (buscar en x64, x86 y LocalAppData)
+$chromePaths = @(
+    "C:\Program Files\Google\Chrome\Application\chrome.exe",
+    "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+)
+$foundChrome = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
+Check-Result "Google Chrome instalado" ([bool]$foundChrome) ($foundChrome)
 
 # 3. Archivos Kiosco
 Check-Result "Backend en C:\ProgramData\kiosk\backend" (Test-Path "C:\ProgramData\kiosk\backend\src\server.js") "server.js presente"

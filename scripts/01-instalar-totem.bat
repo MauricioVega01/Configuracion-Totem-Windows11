@@ -139,9 +139,14 @@ echo [5/7] Generando scripts de ejecucion ^(start-backend.bat y shell.bat^)...
 (
 echo @echo off
 echo title Backend Local Totem %TOTEM_ID% ^(Puerto 3000^)
+echo set "PATH=%%PATH%%;C:\Program Files\nodejs\;C:\Program Files\Git\cmd\"
 echo cd /d "C:\ProgramData\kiosk\backend"
 echo :loop
-echo node src/server.js
+echo if exist "C:\Program Files\nodejs\node.exe" (
+echo     "C:\Program Files\nodejs\node.exe" src/server.js
+echo ) else (
+echo     node src/server.js
+echo )
 echo echo [KIOSK] Backend detenido. Reiniciando en 2 segundos...
 echo timeout /t 2 /nobreak ^>nul
 echo goto loop

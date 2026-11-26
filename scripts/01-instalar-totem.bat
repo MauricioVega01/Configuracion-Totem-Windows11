@@ -17,26 +17,28 @@ echo   Windows 11 + Backend Local (Puerto 3000) + POS + Impresora RAW
 echo ====================================================================
 echo.
 
-:: 2. Verificar prerrequisitos basicos
+:: 2. Verificar prerrequisitos basicos (Auto-instalacion si faltan)
+set "NEED_PREREQS=0"
 where node >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [ERROR] Node.js no esta instalado. Instala Node.js v14.18.2 x64 primero.
-    pause
-    exit /b 1
+if %errorlevel% neq 0 set "NEED_PREREQS=1"
+if not exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "NEED_PREREQS=1"
+
+if "%NEED_PREREQS%"=="1" (
+    echo [INFO] Se detectaron componentes faltantes.
+    echo        Instalando automaticamente Node.js v14.18.2 y Google Chrome desde la carpeta installers...
+    if exist "%~dp000-instalar-prerrequisitos.bat" (
+        call "%~dp000-instalar-prerrequisitos.bat"
+    )
 )
+
 where git >nul 2>&1
 if %errorlevel% neq 0 (
     echo [ERROR] Git no esta instalado. Instala Git for Windows primero.
     pause
     exit /b 1
 )
-if not exist "C:\Program Files\Google\Chrome\Application\chrome.exe" (
-    echo [ERROR] Google Chrome no encontrado en C:\Program Files\Google\Chrome\Application\chrome.exe
-    pause
-    exit /b 1
-)
 
-for /f "tokens=*" %%v in ('node -v') do set NODE_VER=%%v
+for /f "tokens=*" %%v in ('node -v 2^>nul') do set NODE_VER=%%v
 echo [INFO] Node.js detectado: %NODE_VER%
 echo %NODE_VER% | findstr /B "v14." >nul
 if %errorlevel% neq 0 (
@@ -62,7 +64,7 @@ set "KIOSK_USER=totem1"
 set /p "KIOSK_USER=Ingrese usuario Windows del Kiosco [default: totem1]: "
 if "%KIOSK_USER%"=="" set "KIOSK_USER=totem1"
 
-set "BACKEND_REPO=https://github.com/MauricioVega01/new-backen-local-costa.git"
+set "BACKEND_REPO=https://github.com/MauricioVega01/backend-pos-boletos.git"
 set "KIOSK_DIR=C:\ProgramData\kiosk"
 set "BACKEND_DIR=%KIOSK_DIR%\backend"
 

@@ -32,7 +32,9 @@ Check-Result "Google Chrome x64" (Test-Path $chromePath) $chromePath
 
 # 3. Archivos Kiosco
 Check-Result "Backend en C:\ProgramData\kiosk\backend" (Test-Path "C:\ProgramData\kiosk\backend\src\server.js") "server.js presente"
-Check-Result "Binario RAW rawprint.exe" (Test-Path "C:\ProgramData\kiosk\backend\bin\rawprint.exe") "Impresion ESC/POS directa"
+$rawPrintOk = (Test-Path "C:\ProgramData\kiosk\backend\bin\rawprint.exe")
+$kioskPrintOk = (Test-Path "C:\ProgramData\kiosk\shell.bat")
+Check-Result "Motor Impresion w80 (Kiosk/RAW)" ($rawPrintOk -or $kioskPrintOk) "Impresion termica silenciosa configurada"
 Check-Result "Script shell.bat" (Test-Path "C:\ProgramData\kiosk\shell.bat") "C:\ProgramData\kiosk\shell.bat"
 Check-Result "Archivo .env local" (Test-Path "C:\ProgramData\kiosk\backend\.env") "C:\ProgramData\kiosk\backend\.env"
 

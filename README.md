@@ -1,161 +1,235 @@
-# Instalador y Guía de Despliegue Oficial — Tótem Boletos.la Chile (Windows 11)
+# Instalador y Guía Maestra de Despliegue — Tótem Boletos.la Chile (Windows 11)
 
-Repositorio oficial de aprovisionamiento, configuración y diagnóstico para instalar el **Tótem de Autoservicio Boletos.la Chile (WIT)** en cualquier equipo Windows 11 nuevo (ej. mini PC Etorli AMD Ryzen 5, 16GB RAM, 512GB SSD), incorporando todas las correcciones de arquitectura y conectividad resueltas en producción.
+Repositorio oficial y estandarizado para aprovisionar, configurar y certificar el **Tótem de Autoservicio Boletos.la Chile (WIT)** en lotes de computadoras de fábrica (ej. **Mini PC Etorli: AMD Ryzen 5 3500U, 16 GB RAM, 512 GB SSD, Windows 11 Pro 64-bit en Español**).
 
-> **¡Baterías incluidas!** Este repositorio **ya incluye los instaladores oficiales** en la carpeta [`installers/`](installers/):
-> * `installers/node-v14.18.2-x64.msi` (Runtime exacto obligatorio para Transbank POS C++ bindings).
-> * `installers/ChromeSetup.exe` (Navegador oficial para modo Kiosk vertical 1080x1920).
+> **¡Baterías incluidas!** Este repositorio incluye en [`installers/`](installers/) los binarios exactos requeridos:
+> * `installers/node-v14.18.2-x64.msi` (Runtime Node.js obligatorio para compatibilidad nativa con `transbank-pos-sdk` y `serialport`).
+> * `installers/ChromeSetup.exe` (Navegador Google Chrome para modo Kiosk vertical 1080x1920 con silent printing).
 
 ---
 
 ## 🏛️ Arquitectura del Tótem en Producción
 
 ```text
-[Tótem Windows 11 - Usuario: wit]
- ├── Google Chrome Kiosk (1080x1920 vertical)
- │     ├── Frontend Web Kiosco: https://totem-testing-v3.netlify.app/
- │     ├── Microservicios Cloud WIT (HTTPS / WebSocket):
- │     │     ├── Meta-GDS Global (Kupos / Pullman Costa / Distribusion)
- │     │     ├── Convenios y Control de Tarifas (/control-tarifa)
- │     │     ├── Publicidad, Screensaver y Monitoreo de Tótems
- │     │     ├── Analítica de Boletos (Cloud WIT)
- │     │     └── Servicio Mail / PDF con QR
- │     └── Comunicación Local -> http://localhost:3000 (Políticas Enterprise LocalNetworkAccess)
- └── Backend Local Node.js (C:\ProgramData\kiosk\backend - Puerto 3000, stateless)
-       ├── POS Pinpad Transbank (USB-Serial COM autodetectado, 115200 bps)
-       └── Impresora Térmica 80mm "w80" (Silent printing directo vía Chrome --kiosk-printing)
+====================================================================
+  TÓTEM BOLETOS.LA CHILE (WINDOWS 11 - USUARIO: wit)
+====================================================================
+  ├── Google Chrome Kiosk Mode (1080x1920 vertical / Silent Printing)
+  │     ├── Frontend Web Kiosco: https://totem-testing-v3.netlify.app/
+  │     ├── Microservicios Cloud WIT (HTTPS / WebSockets):
+  │     │     ├── Meta-GDS Global (Kupos / Pullman Costa / Distribusion)
+  │     │     ├── Convenios y Control de Tarifas (/control-tarifa)
+  │     │     ├── Publicidad, Screensaver y Monitoreo de Tótems
+  │     │     ├── Analítica de Boletos (Cloud WIT)
+  │     │     └── Servicio Mail / Voucher con QR
+  │     └── Comunicación Local -> http://localhost:3000 (Políticas Enterprise Chrome 157+)
+  └── Backend Local Node.js v14.18.2 (C:\ProgramData\kiosk\backend - Puerto 3000, Stateless)
+        ├── POS Pinpad Transbank PAX (USB-Serial COM autodetectado, Canal MI_00, 115200 bps)
+        └── Impresora Térmica 80mm USB (SPRT / POS-80 en USB001, corte automático y RAW printing)
 ```
 
-> **Nota de Arquitectura:** El PC del tótem **NO requiere base de datos local (MySQL/PostgreSQL)**. Toda la persistencia vive en la nube de WIT y el backend local (`backend-pos-boletos`) actúa como puente liviano de hardware administrado por `shell.bat` y `start-backend.bat`.
+---
+
+## 🚀 Guía Maestra de Despliegue Paso a Paso (Para Replicar en 100 PCs)
+
+### 🔹 Paso 0: Primer Encendido del Hardware de Fábrica
+1. Conecta el Mini PC Etorli a corriente, cable de red Ethernet (o Wi-Fi), monitor (o pantalla táctil), teclado y ratón.
+2. Conecta el hardware periférico en los puertos USB del Mini PC:
+   * **POS Transbank PAX:** Conectar cable USB. (Windows creará puertos `COM3`, `COM4` y `COM5`).
+   * **Impresora Térmica 80mm (SPRT / POS-80):** Conectar cable USB a corriente y encender (switch en **ON** y rollo de papel cargado).
+3. En la configuración inicial de Windows 11 (OOBE):
+   * Región: **Chile**.
+   * Teclado: **Español**.
+   * Usuario Administrador local: **`wit`** (Contraseña recomendada: **`wit321`**).
+4. Ajuste de pantalla (Configuración → Sistema → Pantalla):
+   * Orientación: **Vertical** (Resolución `1080 × 1920`).
+   * Escala: **100%**.
+   * Zona horaria: `(UTC-03:00) Santiago de Chile` con reloj sincronizado.
 
 ---
 
-## 🚀 Guía de Despliegue Paso a Paso (Desde el Primer Encendido)
+### 🔹 Paso 1: Habilitar Consola Administrador y Clonar Repositorio
+Abre **PowerShell como Administrador** (presiona `Windows + X` → selecciona **Terminal (Administrador)** o **Windows PowerShell (Administrador)**).
 
-### 🔹 Paso 0: Primer Encendido del Hardware (Etorli)
-1. Conecta el equipo a corriente, mouse, teclado y cable de red (o Wi-Fi).
-2. Enciende el equipo. Si estás en la configuración inicial de Windows 11 (OOBE):
-   * Selecciona idioma: **Español (Chile)**.
-   * Crea una cuenta local de Administrador (ej: `Admin` o `Innovapro`).
-3. **¿Aún no tienes la pantalla táctil?**
-   * **No hay problema:** El ratón/mouse simula el 100% de los toques táctiles. Puedes instalar y probar todo el flujo con un monitor estándar.
-   * En **Configuración → Sistema → Pantalla**:
-     * Resolución: `1080 × 1920` (o `1920 × 1080` horizontal provisional si tu monitor de prueba no gira).
-     * Escala: **100%**.
-   * En **Configuración → Hora e idioma → Fecha y hora**:
-     * Zona horaria: `(UTC-03:00) Santiago de Chile` y sincronizar reloj.
-
----
-
-### 🔹 Paso 1: Clonar el Repositorio de Despliegue
-Abre **PowerShell como Administrador** (clic derecho en Inicio → *Terminal (Administrador)* o *Windows PowerShell (Administrador)*) y ejecuta:
+Ejecuta el bloque para habilitar scripts de PowerShell y clonar el instalador:
 
 ```powershell
+# 1. Habilitar ejecucion de scripts en Windows 11 de fabrica
+Set-ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
+
+# 2. Crear carpeta base y clonar el repositorio
 mkdir C:\InstalacionTotem -Force
 cd C:\InstalacionTotem
 git clone https://github.com/MauricioVega01/Configuracion-Totem-Windows11.git
 cd Configuracion-Totem-Windows11
 ```
 
+> ⚠️ **IMPORTANTE — Autenticación en Git por PowerShell:**
+> Al clonar o actualizar, Git puede mostrar:
+> `info: please complete authentication in your browser...`
+> Se abrirá automáticamente una ventana de navegador solicitando iniciar sesión en GitHub (**Sign in with your browser**). Inicia sesión con la cuenta técnica para que Git guarde las credenciales en Windows Credential Manager.
+
 ---
 
-### 🔹 Paso 2: Instalación de Prerrequisitos (1 Solo Clic)
-Ejecuta el instalador silencioso de prerrequisitos incluido en el repositorio:
+### 🔹 Paso 2: Instalación de Node.js v14.18.2 y Google Chrome
 
-```cmd
-scripts\00-instalar-prerrequisitos.bat
+Desde la misma consola de PowerShell:
+
+```powershell
+# 1. Instalar Node.js v14.18.2 (x64) con barra visible (tarda 10 segundos)
+Start-Process msiexec.exe -ArgumentList "/i installers\node-v14.18.2-x64.msi /qb" -Wait
+
+# 2. Instalar Google Chrome (o ejecutar installers\ChromeSetup.exe)
+winget install Google.Chrome --silent --accept-package-agreements --accept-source-agreements
 ```
 
-> **¿Qué hace?**
-> * Instala silenciosamente **Node.js v14.18.2 (x64)** desde `installers/node-v14.18.2-x64.msi`.
-> * Instala silenciosamente **Google Chrome (64-bit)** desde `installers/ChromeSetup.exe`.
-> * Refresca las variables de entorno de Windows para que `node` y `npm` queden disponibles de inmediato sin reiniciar.
+> **Verificación rápida:**
+> Ejecuta `& "C:\Program Files\nodejs\node.exe" -v` y confirma que responda `v14.18.2`.
 
 ---
 
 ### 🔹 Paso 3: Ejecutar el Instalador Maestro del Tótem
-Haz doble clic o ejecuta en consola como Administrador:
+
+Ejecuta el script principal:
 
 ```cmd
-scripts\01-instalar-totem.bat
+.\scripts\01-instalar-totem.bat
 ```
 
-El script te solicitará 4 parámetros interactivos sencillos:
-1. **ID del Tótem:** Ingresa el ID asignado (ej: `101`, `102` — predeterminado: `101`).
-2. **Nombre de la impresora térmica:** Presiona *Enter* (toma `w80` por defecto).
-3. **URL del Frontend Kiosco:** Presiona *Enter* (toma `https://totem-testing-v3.netlify.app/` por defecto).
-4. **Usuario Windows del Kiosco:** Presiona *Enter* (toma `wit` por defecto).
+El script solicitará 4 datos interactivos con valores por defecto inteligentes:
+1. **ID del Tótem:** Ingresa el número asignado (ej. `101`, `102` — predeterminado: `101`).
+2. **Nombre de la impresora térmica:** El script consulta a Windows por dispositivos USB térmicos, detecta automáticamente tu impresora (ej. **`SPRT SC260324  80mm Series`**), registra el driver `Generic / Text Only` en el Spooler y la asigna a `USB001`. **Solo presiona `Enter` para confirmar.**
+3. **URL del Frontend Kiosco:** Presiona `Enter` (predeterminado: `https://totem-testing-v3.netlify.app/`).
+4. **Usuario Windows:** Presiona `Enter` (predeterminado: `wit`).
 
-> **¿Qué tareas ejecuta automáticamente `01-instalar-totem.bat`?**
-> 1. Detiene procesos previos conflictivos de Chrome y Node.js.
-> 2. Clona el backend de hardware [`backend-pos-boletos`](https://github.com/MauricioVega01/backend-pos-boletos.git) en `C:\ProgramData\kiosk\backend`.
-> 3. Instala sus dependencias npm en Node 14 (`npm install --production`).
-> 4. Genera el archivo `C:\ProgramData\kiosk\backend\.env` configurado con `PORT=3000` y `TBK_PORT_PATH=AUTO`.
-> 5. Genera `C:\ProgramData\kiosk\start-backend.bat` (loop con auto-recuperación ante caídas).
-> 6. Aplica las **Políticas Enterprise de Chrome** en el Registro (`LocalNetworkAccessAllowedForUrls`, `LoopbackNetworkAllowedForUrls`, `LocalNetworkAllowedForUrls`, `PrintPreviewUseSystemDefaultPrinter=1`) para permitir la comunicación HTTPS → `http://localhost:3000`.
-> 7. Configura `C:\ProgramData\kiosk\shell.bat` fijando la impresora `w80` y lanzando Chrome Kiosk sin barras de navegación ni menús.
-> 8. Registra el lanzador de inicio automático en la carpeta `Startup` del usuario `wit`.
+> **¿Qué hace automáticamente `01-instalar-totem.bat`?**
+> * Clona / actualiza el repositorio [`backend-pos-boletos`](https://github.com/MauricioVega01/backend-pos-boletos.git) en `C:\ProgramData\kiosk\backend`.
+> * Ejecuta `"C:\Program Files\nodejs\npm.cmd" install --production` para instalar los paquetes de Node.
+> * Genera `C:\ProgramData\kiosk\backend\.env` configurado con `PORT=3000`, `TBK_PORT_PATH=AUTO` y la impresora detectada.
+> * Aplica las **Políticas Enterprise de Google Chrome** en el Registro de Windows (`LocalNetworkAccessAllowedForUrls`) para permitir la comunicación segura HTTPS (Netlify) → HTTP `http://localhost:3000`.
+> * Genera `start-backend.bat` y `shell.bat` en `C:\ProgramData\kiosk`.
+> * Registra el lanzador de inicio automático en la carpeta `Startup` del usuario `wit`.
 
 ---
 
 ### 🔹 Paso 4: Configurar AutoLogon y Plan de Energía 24/7
-En PowerShell como Administrador ejecuta:
+
+Para que el Mini PC inicie sesión solo al encenderse (sin pedir contraseña) y nunca entre en suspensión de pantalla:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\04-configurar-autologon.ps1
+powershell -ExecutionPolicy Bypass -File .\scripts\04-configurar-autologon.ps1 -KioskUser wit
 ```
+*(Confirma la contraseña del usuario `wit`, ej: `wit321`).*
 
-> **¿Qué hace?**
-> * Crea el usuario local `wit` (si no existe) y solicita una contraseña.
-> * Configura `AutoAdminLogon` en el Registro para que Windows inicie sesión automáticamente en `wit` sin pedir clave al prenderse el equipo.
+> **Efecto en el sistema:**
+> * Configura `AutoAdminLogon = 1` en el Registro de Windows.
 > * Desactiva la pantalla de bloqueo (`NoLockScreen = 1`).
-> * Desactiva la suspensión, hibernación y apagado de monitor mediante `powercfg` para operación continua 24/7.
+> * Desactiva el apagado de pantalla, suspensión e hibernación (`powercfg /change standby-timeout-ac 0`).
 
 ---
 
-### 🔹 Paso 5: Conectar Hardware y Certificar la Instalación
-1. Conecta el **Pinpad POS Transbank** vía USB. Verifica en *Administrador de dispositivos → Puertos (COM y LPT)* que figure como `COMx` (ej: `COM3`).
-2. Conecta la **Impresora Térmica 80mm** vía USB, instala su driver y cámbiale el nombre en Windows exactamente a **`w80`**.
-3. Ejecuta el script de certificación integral:
+### 🔹 Paso 5: Prueba de Arranque en Vivo del Backend (Inspección Visual)
+
+Para certificar visualmente que el backend local reconoce todo el hardware en tu pantalla:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\02-verificar-totem.ps1 -PrintTest
+cd C:\ProgramData\kiosk\backend
+& "C:\Program Files\nodejs\node.exe" src/server.js
 ```
 
-Deberás ver todos los checks en **verde `[OK]`**:
-* ✅ `Node.js instalado` (v14.18.2).
-* ✅ `Google Chrome x64` instalado.
-* ✅ `Backend en C:\ProgramData\kiosk\backend` presente.
-* ✅ `Politica Chrome LocalNetworkAccess` aplicada en Registro.
-* ✅ `Impresora termica 'w80'` detectada.
-* ✅ `Backend Local HTTP :3000/health` respondiendo OK.
-* ✅ `POS Transbank USB-Serial` conectado y listo.
-* ✅ `Cloud: Meta-GDS Global`, `Publicidad`, `Convenios` y `Analítica` alcanzables por HTTPS.
-* ✅ Ticket térmico de prueba emitido en la impresora `w80`.
+Debes observar en la consola:
+```text
+=============================================
+[SERVER]   TOTEM ID:       102
+[SERVER]   HTTP LISTENING: http://localhost:3000
+[SERVER]   IP RED LOCAL:   192.168.8.x
+[SERVER]   PRINTER RAW:    SPRT SC260324  80mm Series
+=============================================
+[POS]      Puertos detectados en el sistema: COM3, COM4, COM5
+[POS]      Conexión exitosa en COM5
+[POS]      Llaves cargadas exitosamente
+[POS]      POS listo para operar
+```
+*(Presiona `Ctrl + C` para cerrar la prueba en vivo).*
 
 ---
 
-### 🔹 Paso 6: Prueba de Arranque en Frío (Reinicio Físico)
-1. Reinicia el PC Etorli.
-2. Windows iniciará sesión automáticamente en el usuario `wit`.
-3. Se levantará el backend del POS en segundo plano y Chrome Kiosk se abrirá a pantalla completa vertical en menos de 25 segundos.
-4. Vincula el ID de Tótem asignado y ejecuta 1 compra real de bajo monto con tarjeta física para certificar la entrega.
+### 🔹 Paso 6: Diagnóstico Integral y Certificación (16 OK / 0 Fallos)
+
+Inicia el backend en modo servicio minimizado y corre el certificador con impresión de prueba:
+
+```powershell
+cd C:\InstalacionTotem\Configuracion-Totem-Windows11
+Start-Process "C:\ProgramData\kiosk\start-backend.bat" -WindowStyle Minimized
+Start-Sleep -Seconds 4
+.\scripts\02-verificar-totem.ps1 -PrintTest
+```
+
+**Resultado esperado:**
+```text
+====================================================================
+  DIAGNOSTICO Y CERTIFICACION POST-INSTALACION - TOTEM WIT CHILE
+====================================================================
+[OK]   Node.js instalado                          Version: v14.18.2
+[OK]   Google Chrome instalado                    C:\Users\wit\AppData\Local\Google\Chrome\Application\chrome.exe
+[OK]   Backend en C:\ProgramData\kiosk\backend    server.js presente
+[OK]   Dependencias npm (node_modules)            Paquetes npm instalados
+[OK]   Motor Impresion w80 (Kiosk/RAW)            Impresion termica silenciosa configurada
+[OK]   Script shell.bat                           C:\ProgramData\kiosk\shell.bat
+[OK]   Archivo .env local                         C:\ProgramData\kiosk\backend\.env
+[OK]   Politica Chrome LocalNetworkAccess         Permite HTTPS -> localhost:3000
+[OK]   Impresora termica 'SPRT SC260324  80mm Series' USB001 / Generic / Text Only
+[OK]   Backend Local HTTP :3000/health            Totem ID=102, Impresora=SPRT SC260324  80mm Series
+[OK]   POS Transbank USB-Serial                   Conectado=True | Puerto=COM5
+[OK]   Cloud: Frontend Netlify                    HTTP 200
+[OK]   Cloud: Meta-GDS Global                     HTTP 200
+[OK]   Cloud: Publicidad Chile                    HTTP 200
+[OK]   Cloud: Convenios Chile                     HTTP 200
+[OK]   Cloud: Analitica Boletos                   HTTP 200
+
+Enviando ticket de prueba RAW a impresora SPRT SC260324  80mm Series...
+[OK]   Impresion termica RAW de prueba            Ticket emitido en SPRT SC260324  80mm Series
+
+====================================================================
+  RESUMEN: 16 OK  |  0 FALLOS
+====================================================================
+```
+La impresora térmica cortará físicamente el voucher de certificación de WIT.
 
 ---
 
-## 🛠️ Panel Técnico y Mantenimiento
+### 🔹 Paso 7: Reinicio en Frío y Verificación de Modo Quiosco Real
 
-* **Abrir Panel Técnico oculto:** En la pantalla del tótem, presiona 5 toques rápidos en la esquina superior izquierda (`100×100 px`) e ingresa el PIN **`1379`**.
-* **Actualizar el backend de hardware sin reinstalar:** Ejecutar `scripts\03-actualizar-backend.bat` como Administrador.
-* **Guía de diagnóstico ante fallas en terreno:** Ver [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md).
-* **Checklist técnico imprimible/firmable:** Ver [docs/CHECKLIST_INSTALACION.md](docs/CHECKLIST_INSTALACION.md).
+Reinicia el equipo para verificar el ciclo de producción desatendido:
+
+```powershell
+shutdown /r /t 5
+```
+
+**Comportamiento en producción:**
+1. Windows 11 inicia sesión automáticamente con el usuario `wit`.
+2. Se ejecuta en segundo plano `C:\ProgramData\kiosk\start-backend.bat`, conectándose al POS en `COM5` y preparando la impresora.
+3. Se abre Google Chrome a pantalla completa vertical en `https://totem-testing-v3.netlify.app/` en modo quiosco (--kiosk --kiosk-printing) sin barras, menús ni diálogos de confirmación de impresión.
+4. El tótem queda listo para vender boletos 24/7.
+
+---
+
+## 🛠️ Comandos de Mantenimiento y Recuperación Rápida
+
+| Tarea | Comando / Acción |
+|---|---|
+| **Verificar estado de componentes** | `powershell -ExecutionPolicy Bypass -File C:\InstalacionTotem\Configuracion-Totem-Windows11\scripts\02-verificar-totem.ps1 -PrintTest` |
+| **Actualizar backend desde GitHub** | `C:\InstalacionTotem\Configuracion-Totem-Windows11\scripts\03-actualizar-backend.bat` |
+| **Consultar estado del POS Transbank** | `Invoke-RestMethod http://localhost:3000/api/terminal/status` |
+| **Revisar puertos USB conectados** | `Get-PnpDevice -PresentOnly \| Where-Object { $_.FriendlyName -match 'SPRT\|POS\|COM\|USB' }` |
+| **Abrir Panel Técnico en pantalla** | Presionar 5 toques rápidos en la esquina superior izquierda (`100x100 px`) e ingresar PIN **`1379`**. |
 
 ---
 
 ## 📦 Repositorios Oficiales del Ecosistema
 
-| Componente | Repositorio Oficial | Rama |
+| Componente | Repositorio Oficial en GitHub | Rama |
 | :--- | :--- | :--- |
 | **Instalador y Políticas Windows 11** | `https://github.com/MauricioVega01/Configuracion-Totem-Windows11.git` | `main` |
-| **Backend Local Hardware (POS + w80)** | `https://github.com/MauricioVega01/backend-pos-boletos.git` | `master` |
+| **Backend Local Hardware (POS + SPRT)** | `https://github.com/MauricioVega01/backend-pos-boletos.git` | `master` |
 | **Frontend Web Tótem Kiosco** | `https://github.com/dorian-cesar/front-totem-boletos-la.git` | `totem-boletos-chile-dev` |

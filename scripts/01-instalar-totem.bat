@@ -170,8 +170,15 @@ echo.
 echo start /min "POS_BACKEND" cmd /c "C:\ProgramData\kiosk\start-backend.bat"
 echo timeout /t 3 /nobreak ^>nul
 echo.
+echo set "CHROME_EXE="
+echo if exist "C:\Program Files\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=C:\Program Files\Google\Chrome\Application\chrome.exe"
+echo if exist "C:\Program Files ^(x86^)\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=C:\Program Files ^(x86^)\Google\Chrome\Application\chrome.exe"
+echo if exist "%%LocalAppData%%\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=%%LocalAppData%%\Google\Chrome\Application\chrome.exe"
+echo if exist "C:\Users\%KIOSK_USER%\AppData\Local\Google\Chrome\Application\chrome.exe" set "CHROME_EXE=C:\Users\%KIOSK_USER%\AppData\Local\Google\Chrome\Application\chrome.exe"
+echo if not defined CHROME_EXE set "CHROME_EXE=chrome.exe"
+echo.
 echo :kiosk_loop
-echo start /wait "" "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk --kiosk-printing %KIOSK_URL% --disable-web-security --user-data-dir="C:\ProgramData\kiosk\chrome_session" --allow-running-insecure-content --disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks,LocalNetworkAccessChecksWebSockets --unsafely-treat-insecure-origin-as-secure=http://localhost:3000 --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 --disable-pinch
+echo start /wait "" "%%CHROME_EXE%%" --kiosk --kiosk-printing %KIOSK_URL% --disable-web-security --user-data-dir="C:\ProgramData\kiosk\chrome_session" --allow-running-insecure-content --disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks,LocalNetworkAccessChecksWebSockets --unsafely-treat-insecure-origin-as-secure=http://localhost:3000 --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 --disable-pinch
 echo timeout /t 2 /nobreak ^>nul
 echo goto kiosk_loop
 ) > "%KIOSK_DIR%\shell.bat"

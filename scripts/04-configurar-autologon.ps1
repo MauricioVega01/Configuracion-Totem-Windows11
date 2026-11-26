@@ -1,6 +1,6 @@
 ﻿#Requires -RunAsAdministrator
 param(
-    [string]$KioskUser = "totem1"
+    [string]$KioskUser = "wit"
 )
 
 Write-Host "====================================================================" -ForegroundColor Cyan

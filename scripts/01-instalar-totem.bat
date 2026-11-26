@@ -60,9 +60,9 @@ set "KIOSK_URL=https://totem-testing-v3.netlify.app/"
 set /p "KIOSK_URL=Ingrese URL del Frontend Kiosco [default: https://totem-testing-v3.netlify.app/]: "
 if "%KIOSK_URL%"=="" set "KIOSK_URL=https://totem-testing-v3.netlify.app/"
 
-set "KIOSK_USER=totem1"
-set /p "KIOSK_USER=Ingrese usuario Windows del Kiosco [default: totem1]: "
-if "%KIOSK_USER%"=="" set "KIOSK_USER=totem1"
+set "KIOSK_USER=wit"
+set /p "KIOSK_USER=Ingrese usuario Windows del Kiosco [default: wit]: "
+if "%KIOSK_USER%"=="" set "KIOSK_USER=wit"
 
 set "BACKEND_REPO=https://github.com/MauricioVega01/backend-pos-boletos.git"
 set "KIOSK_DIR=C:\ProgramData\kiosk"

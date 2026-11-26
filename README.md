@@ -11,7 +11,7 @@ Repositorio oficial de aprovisionamiento, configuración y diagnóstico para ins
 ## 🏛️ Arquitectura del Tótem en Producción
 
 ```text
-[Tótem Windows 11 - Usuario: totem1]
+[Tótem Windows 11 - Usuario: wit]
  ├── Google Chrome Kiosk (1080x1920 vertical)
  │     ├── Frontend Web Kiosco: https://totem-testing-v3.netlify.app/
  │     ├── Microservicios Cloud WIT (HTTPS / WebSocket):
@@ -84,7 +84,7 @@ El script te solicitará 4 parámetros interactivos sencillos:
 1. **ID del Tótem:** Ingresa el ID asignado (ej: `101`, `102` — predeterminado: `101`).
 2. **Nombre de la impresora térmica:** Presiona *Enter* (toma `w80` por defecto).
 3. **URL del Frontend Kiosco:** Presiona *Enter* (toma `https://totem-testing-v3.netlify.app/` por defecto).
-4. **Usuario Windows del Kiosco:** Presiona *Enter* (toma `totem1` por defecto).
+4. **Usuario Windows del Kiosco:** Presiona *Enter* (toma `wit` por defecto).
 
 > **¿Qué tareas ejecuta automáticamente `01-instalar-totem.bat`?**
 > 1. Detiene procesos previos conflictivos de Chrome y Node.js.
@@ -94,7 +94,7 @@ El script te solicitará 4 parámetros interactivos sencillos:
 > 5. Genera `C:\ProgramData\kiosk\start-backend.bat` (loop con auto-recuperación ante caídas).
 > 6. Aplica las **Políticas Enterprise de Chrome** en el Registro (`LocalNetworkAccessAllowedForUrls`, `LoopbackNetworkAllowedForUrls`, `LocalNetworkAllowedForUrls`, `PrintPreviewUseSystemDefaultPrinter=1`) para permitir la comunicación HTTPS → `http://localhost:3000`.
 > 7. Configura `C:\ProgramData\kiosk\shell.bat` fijando la impresora `w80` y lanzando Chrome Kiosk sin barras de navegación ni menús.
-> 8. Registra el lanzador de inicio automático en la carpeta `Startup` del usuario `totem1`.
+> 8. Registra el lanzador de inicio automático en la carpeta `Startup` del usuario `wit`.
 
 ---
 
@@ -106,8 +106,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\04-configurar-autologon.ps1
 ```
 
 > **¿Qué hace?**
-> * Crea el usuario local `totem1` (si no existe) y solicita una contraseña.
-> * Configura `AutoAdminLogon` en el Registro para que Windows inicie sesión automáticamente en `totem1` sin pedir clave al prenderse el equipo.
+> * Crea el usuario local `wit` (si no existe) y solicita una contraseña.
+> * Configura `AutoAdminLogon` en el Registro para que Windows inicie sesión automáticamente en `wit` sin pedir clave al prenderse el equipo.
 > * Desactiva la pantalla de bloqueo (`NoLockScreen = 1`).
 > * Desactiva la suspensión, hibernación y apagado de monitor mediante `powercfg` para operación continua 24/7.
 
@@ -137,7 +137,7 @@ Deberás ver todos los checks en **verde `[OK]`**:
 
 ### 🔹 Paso 6: Prueba de Arranque en Frío (Reinicio Físico)
 1. Reinicia el PC Etorli.
-2. Windows iniciará sesión automáticamente en el usuario `totem1`.
+2. Windows iniciará sesión automáticamente en el usuario `wit`.
 3. Se levantará el backend del POS en segundo plano y Chrome Kiosk se abrirá a pantalla completa vertical en menos de 25 segundos.
 4. Vincula el ID de Tótem asignado y ejecuta 1 compra real de bajo monto con tarjeta física para certificar la entrega.
 

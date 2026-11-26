@@ -12,7 +12,7 @@ Completar para cada unidad desplegada en terminal o punto de venta.
 ## 1. Preparación de Sistema Operativo y Hardware
 - [ ] Windows 11 activado y hora sincronizada (`America/Santiago`).
 - [ ] Pantalla táctil en orientación **Vertical (`1080×1920`)**, escala `100%`, toque calibrado.
-- [ ] Usuario kiosco `totem1` creado y configurado con `AutoAdminLogon` (`scripts\04-configurar-autologon.ps1`).
+- [ ] Usuario kiosco `wit` creado y configurado con `AutoAdminLogon` (`scripts\04-configurar-autologon.ps1`).
 - [ ] Suspensión, hibernación y apagado automático de pantalla desactivados (`powercfg`).
 - [ ] **Node.js v14.18.2 (x64)**, **Git** y **Google Chrome x64** instalados.
 - [ ] Impresora térmica instalada con nombre exacto **`w80`**, papel 80mm cargado y prueba de corte OK.
@@ -22,7 +22,7 @@ Completar para cada unidad desplegada en terminal o punto de venta.
 - [ ] Ejecutado `scripts\01-instalar-totem.bat` con el `TOTEM_ID` correcto.
 - [ ] Ejecutado `scripts\02-verificar-totem.ps1 -PrintTest` con **0 fallos (`[FAIL]`)**.
 - [ ] Ticket de certificación RAW impreso con logo nítido y corte limpio en menos de 1 segundo.
-- [ ] Cold Boot (reinicio físico completo): Windows inicia en `totem1`, levanta puerto `3000` + Pinpad + Chrome Kiosk sin intervención humana.
+- [ ] Cold Boot (reinicio físico completo): Windows inicia en `wit`, levanta puerto `3000` + Pinpad + Chrome Kiosk sin intervención humana.
 
 ## 3. Pruebas Funcionales End-to-End (E2E)
 - [ ] Pantalla inicial vinculada al `TOTEM_ID` y videos de screensaver reproduciendo correctamente.

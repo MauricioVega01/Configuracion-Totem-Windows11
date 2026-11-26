@@ -28,7 +28,7 @@ if ([string]::IsNullOrWhiteSpace($PrinterName) -or $PrinterName -eq "AUTO") {
     if ($realPrinter) {
         $PrinterName = $realPrinter
     } else {
-        $usbPrinter = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|POS|Xprint|Thermal' } | Select-Object -First 1).FriendlyName
+        $usbPrinter = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|\bPOS\b|Xprint|Thermal' } | Select-Object -First 1).FriendlyName
         if ($usbPrinter) {
             $PrinterName = $usbPrinter
         } else {
@@ -83,7 +83,7 @@ Check-Result "Politica Chrome LocalNetworkAccess" ([bool]$p1) "Permite HTTPS -> 
 # 5. Impresora termica (Autodeteccion y autoregistro si esta conectada por USB)
 $printer = Get-Printer -Name $PrinterName -ErrorAction SilentlyContinue
 if (-not $printer) {
-    $usbThermal = Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|POS|Xprint|Thermal' } | Select-Object -First 1
+    $usbThermal = Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|\bPOS\b|Xprint|Thermal' } | Select-Object -First 1
     if ($usbThermal) {
         $pPort = (Get-PrinterPort -ErrorAction SilentlyContinue | Where-Object { $_.Name -like "USB*" } | Select-Object -First 1).Name
         if (-not $pPort) { $pPort = "USB001" }

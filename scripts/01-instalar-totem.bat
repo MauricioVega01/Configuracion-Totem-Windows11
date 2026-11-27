@@ -178,8 +178,11 @@ echo if exist "C:\Users\%KIOSK_USER%\AppData\Local\Google\Chrome\Application\chr
 echo if not defined CHROME_EXE set "CHROME_EXE=chrome.exe"
 echo.
 echo :kiosk_loop
-echo start /wait "" "%%CHROME_EXE%%" --kiosk --kiosk-printing %KIOSK_URL% --disable-web-security --user-data-dir="C:\ProgramData\kiosk\chrome_session" --allow-running-insecure-content --disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks,LocalNetworkAccessChecksWebSockets --unsafely-treat-insecure-origin-as-secure=http://localhost:3000 --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 --disable-pinch
-echo timeout /t 2 /nobreak ^>nul
+echo tasklist /FI "IMAGENAME eq chrome.exe" 2^>nul ^| find /I /N "chrome.exe" ^>nul
+echo if errorlevel 1 (
+echo     start "" "%%CHROME_EXE%%" --kiosk --kiosk-printing %KIOSK_URL% --disable-web-security --user-data-dir="C:\ProgramData\kiosk\chrome_session" --allow-running-insecure-content --disable-features=BlockInsecurePrivateNetworkRequests,LocalNetworkAccessChecks,LocalNetworkAccessChecksWebSockets --unsafely-treat-insecure-origin-as-secure=http://localhost:3000 --no-first-run --no-default-browser-check --disable-session-crashed-bubble --overscroll-history-navigation=0 --disable-pinch
+echo )
+echo timeout /t 5 /nobreak ^>nul
 echo goto kiosk_loop
 ) > "%KIOSK_DIR%\shell.bat"
 

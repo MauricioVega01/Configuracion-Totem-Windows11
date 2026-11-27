@@ -2,9 +2,10 @@
 
 Repositorio oficial y estandarizado para aprovisionar, configurar y certificar el **Tótem de Autoservicio Boletos.la Chile (WIT)** en lotes de computadoras de fábrica (ej. **Mini PC Etorli: AMD Ryzen 5 3500U, 16 GB RAM, 512 GB SSD, Windows 11 Pro 64-bit en Español**).
 
-> **¡Baterías incluidas!** Este repositorio incluye en [`installers/`](installers/) los binarios exactos requeridos:
-> * `installers/node-v14.18.2-x64.msi` (Runtime Node.js obligatorio para compatibilidad nativa con `transbank-pos-sdk` y `serialport`).
-> * `installers/ChromeSetup.exe` (Navegador Google Chrome para modo Kiosk vertical 1080x1920 con silent printing).
+> **¡Baterías incluidas y Enlaces Oficiales!**
+> Los binarios exactos ya están en la carpeta [`installers/`](installers/), pero también dispones de los enlaces directos oficiales del fabricante:
+> * **Node.js v14.18.2 (x64) MSI:** [`installers/node-v14.18.2-x64.msi`](installers/node-v14.18.2-x64.msi) o [Descarga Directa nodejs.org](https://nodejs.org/dist/v14.18.2/node-v14.18.2-x64.msi) *(Obligatorio para compatibilidad nativa C++ con `transbank-pos-sdk` y `serialport`)*.
+> * **Google Chrome 64-bit:** [`installers/ChromeSetup.exe`](installers/ChromeSetup.exe) o [Descarga Oficial Chrome Standalone x64](https://dl.google.com/chrome/install/standalone/service/ChromeStandaloneSetup64.exe) *(Instalador sin conexión que no se cuelga)*.
 
 ---
 
@@ -73,24 +74,33 @@ cd Configuracion-Totem-Windows11
 
 ### 🔹 Paso 2: Instalación de Node.js v14.18.2 y Google Chrome
 
-Desde la misma consola de PowerShell:
+> 💡 **¿Por qué es mejor la instalación con barra `/qb` o doble clic en vez de scripts 100% invisibles?**
+> En computadoras de fábrica, los instaladores "silenciosos" (`/silent` o `/qn`) pueden colgarse o bloquearse en segundo plano si SmartScreen o Windows Update están activos, sin avisarle al técnico. La instalación semi-asistida con `/qb` o doble clic muestra la barra de progreso real, tarda solo **10 segundos** y garantiza al 100% que los archivos queden registrados.
 
-```powershell
-# 1. Instalar Node.js v14.18.2 (x64) con barra visible (tarda 10 segundos)
-Start-Process msiexec.exe -ArgumentList "/i installers\node-v14.18.2-x64.msi /qb" -Wait
+#### 1. Instalar Node.js v14.18.2 (x64)
+* **Opción A (Recomendada desde PowerShell):**
+  ```powershell
+  Start-Process msiexec.exe -ArgumentList "/i installers\node-v14.18.2-x64.msi /qb" -Wait
+  ```
+* **Opción B (Doble clic manual):**
+  Abre la carpeta `C:\InstalacionTotem\Configuracion-Totem-Windows11\installers` y haz doble clic en `node-v14.18.2-x64.msi` → *Next, Next, Install*.
+* **Descarga directa si falta el archivo:** [https://nodejs.org/dist/v14.18.2/node-v14.18.2-x64.msi](https://nodejs.org/dist/v14.18.2/node-v14.18.2-x64.msi)
+* **Verificación:** Ejecuta `& "C:\Program Files\nodejs\node.exe" -v` y confirma que diga `v14.18.2`.
 
-# 2. Instalar Google Chrome (o ejecutar installers\ChromeSetup.exe)
-winget install Google.Chrome --silent --accept-package-agreements --accept-source-agreements
-```
-
-> **Verificación rápida:**
-> Ejecuta `& "C:\Program Files\nodejs\node.exe" -v` y confirma que responda `v14.18.2`.
+#### 2. Instalar Google Chrome (64-bit)
+* **Opción A (Vía winget en PowerShell):**
+  ```powershell
+  winget install Google.Chrome --silent --accept-package-agreements --accept-source-agreements
+  ```
+* **Opción B (Doble clic manual):**
+  Doble clic en `installers\ChromeSetup.exe` o descarga el instalador offline completo:
+  [https://dl.google.com/chrome/install/standalone/service/ChromeStandaloneSetup64.exe](https://dl.google.com/chrome/install/standalone/service/ChromeStandaloneSetup64.exe).
 
 ---
 
 ### 🔹 Paso 3: Ejecutar el Instalador Maestro del Tótem
 
-Ejecuta el script principal:
+Ejecuta el script principal desde la consola de Administrador:
 
 ```cmd
 .\scripts\01-instalar-totem.bat
@@ -112,25 +122,21 @@ El script solicitará 4 datos interactivos con valores por defecto inteligentes:
 
 ---
 
-### 🔹 Paso 4: Configurar AutoLogon y Plan de Energía 24/7
+### 🔹 Paso 4: Asegurar Dependencias del Backend (`npm install`)
 
-Para que el Mini PC inicie sesión solo al encenderse (sin pedir contraseña) y nunca entre en suspensión de pantalla:
+Si por alguna razón Node se instaló después o quieres asegurar al 100% las dependencias del backend:
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File .\scripts\04-configurar-autologon.ps1 -KioskUser wit
+cd C:\ProgramData\kiosk\backend
+& "C:\Program Files\nodejs\npm.cmd" install --production
 ```
-*(Confirma la contraseña del usuario `wit`, ej: `wit321`).*
-
-> **Efecto en el sistema:**
-> * Configura `AutoAdminLogon = 1` en el Registro de Windows.
-> * Desactiva la pantalla de bloqueo (`NoLockScreen = 1`).
-> * Desactiva el apagado de pantalla, suspensión e hibernación (`powercfg /change standby-timeout-ac 0`).
+*(Confirma que exista la carpeta `C:\ProgramData\kiosk\backend\node_modules`).*
 
 ---
 
 ### 🔹 Paso 5: Prueba de Arranque en Vivo del Backend (Inspección Visual)
 
-Para certificar visualmente que el backend local reconoce todo el hardware en tu pantalla:
+Para certificar visualmente en tu propia pantalla que el backend reconoce el hardware:
 
 ```powershell
 cd C:\ProgramData\kiosk\backend
@@ -154,7 +160,23 @@ Debes observar en la consola:
 
 ---
 
-### 🔹 Paso 6: Diagnóstico Integral y Certificación (16 OK / 0 Fallos)
+### 🔹 Paso 6: Configurar AutoLogon y Plan de Energía 24/7
+
+Para que el Mini PC inicie sesión solo al encenderse (sin pedir contraseña) y nunca entre en suspensión de pantalla:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\InstalacionTotem\Configuracion-Totem-Windows11\scripts\04-configurar-autologon.ps1 -KioskUser wit
+```
+*(Confirma la contraseña del usuario `wit`, ej: `wit321`).*
+
+> **Efecto en el sistema:**
+> * Configura `AutoAdminLogon = 1` en el Registro de Windows.
+> * Desactiva la pantalla de bloqueo (`NoLockScreen = 1`).
+> * Desactiva el apagado de pantalla, suspensión e hibernación (`powercfg /change standby-timeout-ac 0`).
+
+---
+
+### 🔹 Paso 7: Diagnóstico Integral y Certificación (16 OK / 0 Fallos)
 
 Inicia el backend en modo servicio minimizado y corre el certificador con impresión de prueba:
 
@@ -198,7 +220,7 @@ La impresora térmica cortará físicamente el voucher de certificación de WIT.
 
 ---
 
-### 🔹 Paso 7: Reinicio en Frío y Verificación de Modo Quiosco Real
+### 🔹 Paso 8: Reinicio en Frío y Configuración Inicial del ID en Pantalla
 
 Reinicia el equipo para verificar el ciclo de producción desatendido:
 
@@ -209,8 +231,9 @@ shutdown /r /t 5
 **Comportamiento en producción:**
 1. Windows 11 inicia sesión automáticamente con el usuario `wit`.
 2. Se ejecuta en segundo plano `C:\ProgramData\kiosk\start-backend.bat`, conectándose al POS en `COM5` y preparando la impresora.
-3. Se abre Google Chrome a pantalla completa vertical en `https://totem-testing-v3.netlify.app/` en modo quiosco (--kiosk --kiosk-printing) sin barras, menús ni diálogos de confirmación de impresión.
-4. El tótem queda listo para vender boletos 24/7.
+3. Se abre Google Chrome a pantalla completa vertical en `https://totem-testing-v3.netlify.app/` en modo quiosco (`--kiosk --kiosk-printing`) sin barras, menús ni diálogos de confirmación de impresión.
+4. **Pantalla de Configuración Inicial:** Aparecerá la ventana de bienvenida solicitando el ID del tótem. Con el teclado táctil numérico en pantalla, ingresa el ID asignado (ej. **`102`**) y presiona **`Iniciar Tótem ➔`**.
+5. El sistema guardará la configuración, pasará a la pantalla principal (**"Comprar Pasaje" / "Imprimir Pasaje"**) y quedará 100% listo para venta al público 24/7.
 
 ---
 

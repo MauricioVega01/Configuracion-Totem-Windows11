@@ -1,8 +1,14 @@
 @echo off
-title Backend Local Totem (Puerto 3000)
+title Backend Local Totem 101 (Puerto 3000)
+set "PATH=%PATH%;C:\Program Files\nodejs\;C:\Program Files\Git\cmd\"
 cd /d "C:\ProgramData\kiosk\backend"
 :loop
+if exist "C:\Program Files\nodejs\node.exe" goto run_full_node
 node src/server.js
+goto wait_restart
+:run_full_node
+"C:\Program Files\nodejs\node.exe" src/server.js
+:wait_restart
 echo [KIOSK] Backend detenido. Reiniciando en 2 segundos...
 timeout /t 2 /nobreak >nul
 goto loop

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [switch]$PrintTest,
     [string]$PrinterName = ""
 )
@@ -28,7 +28,7 @@ if ([string]::IsNullOrWhiteSpace($PrinterName) -or $PrinterName -eq "AUTO") {
     if ($realPrinter) {
         $PrinterName = $realPrinter
     } else {
-        $usbPrinter = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match '80mm|SPRT|\bPOS\b|Xprint|Thermal' } | Select-Object -First 1).FriendlyName
+        $usbPrinter = (Get-PnpDevice -PresentOnly -ErrorAction SilentlyContinue | Where-Object { $_.InstanceId -like 'USB*' -and $_.FriendlyName -match '80mm|58mm|SPRT|\bPOS\b|Xprint|Receipt|Thermal Printer' } | Select-Object -First 1).FriendlyName
         if ($usbPrinter) {
             $PrinterName = $usbPrinter
         } else {
@@ -58,11 +58,12 @@ $nodeExe = if ($nodeCmd) { $nodeCmd.Source } elseif (Test-Path "C:\Program Files
 $nodeVer = if ($nodeExe) { (& $nodeExe -v 2>$null) } else { $null }
 Check-Result "Node.js instalado" ([bool]$nodeVer) "Version: $nodeVer (recomendado v14.x)"
 
-# 2. Chrome (buscar en x64, x86 y LocalAppData)
+# 2. Chrome (buscar en x64, x86, LocalAppData y perfil wit)
 $chromePaths = @(
     "C:\Program Files\Google\Chrome\Application\chrome.exe",
     "C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
-    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe"
+    "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe",
+    "C:\Users\wit\AppData\Local\Google\Chrome\Application\chrome.exe"
 )
 $foundChrome = $chromePaths | Where-Object { Test-Path $_ } | Select-Object -First 1
 Check-Result "Google Chrome instalado" ([bool]$foundChrome) ($foundChrome)
@@ -72,7 +73,7 @@ Check-Result "Backend en C:\ProgramData\kiosk\backend" (Test-Path "C:\ProgramDat
 Check-Result "Dependencias npm (node_modules)" (Test-Path "C:\ProgramData\kiosk\backend\node_modules") "Paquetes npm instalados"
 $rawPrintOk = (Test-Path "C:\ProgramData\kiosk\backend\bin\rawprint.exe")
 $kioskPrintOk = (Test-Path "C:\ProgramData\kiosk\shell.bat")
-Check-Result "Motor Impresion w80 (Kiosk/RAW)" ($rawPrintOk -or $kioskPrintOk) "Impresion termica silenciosa configurada"
+Check-Result "Motor Impresion (Kiosk/RAW)" ($rawPrintOk -or $kioskPrintOk) "Impresion termica silenciosa configurada"
 Check-Result "Script shell.bat" (Test-Path "C:\ProgramData\kiosk\shell.bat") "C:\ProgramData\kiosk\shell.bat"
 Check-Result "Archivo .env local" (Test-Path "C:\ProgramData\kiosk\backend\.env") "C:\ProgramData\kiosk\backend\.env"
 

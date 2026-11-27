@@ -91,8 +91,8 @@ Repositorio oficial y estandarizado para aprovisionar, configurar y certificar e
    # 2. Crear carpeta base y clonar repositorio
    mkdir C:\InstalacionTotem -Force
    cd C:\InstalacionTotem
-   git clone https://github.com/MauricioVega01/Configuracion-Totem-Windows11.git
-   cd Configuracion-Totem-Windows11
+   git clone https://github.com/boletos-la/Totem-boletos-win11.git
+   cd Totem-boletos-win11
    ```
 
 > 🔐 **IMPORTANTE — Autenticación en GitHub desde PowerShell:**
@@ -106,7 +106,7 @@ Repositorio oficial y estandarizado para aprovisionar, configurar y certificar e
 
 ### 🔹 Paso 3: Ejecutar el Configurador Oficial del Tótem
 
-Desde la consola de **Administrador** dentro de `C:\InstalacionTotem\Configuracion-Totem-Windows11`:
+Desde la consola de **Administrador** dentro de `C:\InstalacionTotem\Totem-boletos-win11`:
 
 ```powershell
 .\scripts\01-instalar-totem.bat
@@ -168,7 +168,7 @@ Presiona **`Ctrl + C`** para detener esta prueba en vivo y volver al prompt.
 Para que al encenderse el equipo entre solo al escritorio de **`wit`** (sin pedir contraseña) y nunca apague la pantalla ni entre en suspensión:
 
 ```powershell
-cd C:\InstalacionTotem\Configuracion-Totem-Windows11
+cd C:\InstalacionTotem\Totem-boletos-win11
 .\scripts\04-configurar-autologon.ps1 -KioskUser wit
 ```
 *(Cuando te lo pida, escribe la contraseña del usuario `wit`, por ejemplo `wit321`).*
@@ -218,6 +218,6 @@ shutdown /r /t 5
 
 | Componente | Repositorio Oficial en GitHub | Rama |
 | :--- | :--- | :--- |
-| **Configurador y Políticas Windows 11** | `https://github.com/MauricioVega01/Configuracion-Totem-Windows11.git` | `main` |
+| **Configurador y Políticas Windows 11** | `https://github.com/boletos-la/Totem-boletos-win11.git` | `main` |
 | **Backend Local Hardware (POS PAX + Impresora RAW)** | `https://github.com/MauricioVega01/backend-pos-boletos.git` | `master` |
 | **Frontend Web Tótem Kiosco** | `https://github.com/dorian-cesar/front-totem-boletos-la.git` | `totem-boletos-chile-dev` |

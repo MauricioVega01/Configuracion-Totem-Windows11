@@ -30,7 +30,7 @@ Completar y archivar para cada una de las unidades desplegadas (lote de 100 Mini
 ---
 
 ## 3. Configuración, Backend y Políticas
-- [ ] Repositorio `Configuracion-Totem-Windows11` clonado en `C:\InstalacionTotem\Configuracion-Totem-Windows11`.
+- [ ] Repositorio `Totem-boletos-win11` clonado en `C:\InstalacionTotem\Totem-boletos-win11`.
 - [ ] Ejecutado `.\scripts\01-instalar-totem.bat` ingresando el `TOTEM_ID` correcto.
 - [ ] Impresora térmica registrada con su nombre nativo en `USB001` (`Generic / Text Only` o driver fabricante).
 - [ ] Backend `backend-pos-boletos` descargado en `C:\ProgramData\kiosk\backend` y con carpeta `node_modules` instalada (`npm install --production`).
